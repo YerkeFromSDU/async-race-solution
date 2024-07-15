@@ -1,0 +1,56 @@
+{
+    "root": true,
+    "env": {
+      "browser": true,
+      "es2021": true
+    },
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "prettier"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "extends": [
+    "airbnb",
+    "airbnb/hooks",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+    "rules": {
+      "react/jsx-filename-extension": 
+          [1, { "extensions": [".jsx", ".tsx"] }],
+      "max-lines-per-function": ["error", 40],
+      "no-magic-numbers": ["error", { "ignore": [0, 1] }],
+      "prettier/prettier": [
+        "error", {
+          "printWidth": 80,
+          "trailingComma": "es5",
+          "semi": true,
+          "jsxSingleQuote": true,
+          "singleQuote": true,
+          "useTabs": true,
+          "endOfLine": "auto",
+          "max-len": ["error", { "code": 80 }],
+          "importOrder": [
+            "^react(.*)$",
+            "<THIRD_PARTY_MODULES>",
+            "./types",
+            "^[.](?!.*.(scss|css)$).*$",
+            "(.*).(scss|css)$"
+          ],
+          "importOrderSeparation": true,
+          "importOrderSortSpecifiers": true
+        }
+      ],
+  
+      "@typescript-eslint/no-namespace": "off",
+      "no-duplicate-imports": "error"
+    }
+  }
