@@ -1,0 +1,7 @@
+body{
+    /* background-color: #f0ede5; */
+    /* background-color: #000000; */
+    background-image: url(/public/back.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+}

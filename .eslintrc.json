@@ -7,7 +7,8 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
       "@typescript-eslint",
-      "prettier"
+      "prettier",
+      "import"
     ],
     "parserOptions": {
         "ecmaVersion": 2020,
@@ -17,17 +18,29 @@
         }
     },
     "extends": [
-    "airbnb",
-    "airbnb/hooks",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:import/typescript",
-    "prettier"
+      "airbnb",
+      "airbnb/hooks",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:import/typescript",
+      "prettier"
   ],
     "rules": {
+      "no-param-reassign":"off",
+      "no-console":"off",
+      "react/function-component-definition": "off",
+      "arrow-body-style":"off",
       "react/jsx-filename-extension": 
           [1, { "extensions": [".jsx", ".tsx"] }],
-      "max-lines-per-function": ["error", 40],
+      "max-lines-per-function": ["error", 200],
       "no-magic-numbers": ["error", { "ignore": [0, 1] }],
+      "import/no-extraneous-dependencies": [
+        "error", 
+        {
+          "devDependencies": false, 
+          "optionalDependencies": false, 
+          "peerDependencies": false
+        }
+      ],
       "prettier/prettier": [
         "error", {
           "printWidth": 80,
