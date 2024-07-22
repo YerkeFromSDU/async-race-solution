@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux'; //eslint-disable-line
 import { AppDispatch } from '../../store/store.ts';
 import RaceControlPanel from './ConrollPanel/RaceControlPanel/RaceControlPanel.tsx';
 import CarCreationPanel from './ConrollPanel/CarCreationPanel/CarCreationPanel.tsx';

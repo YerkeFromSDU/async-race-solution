@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux'; //eslint-disable-line
 import { RootState, AppDispatch } from '../../../store/store.ts';
 import { fetchWinners } from '../../../store/winnerSlice.ts';
 import './WinnerSection.css';
