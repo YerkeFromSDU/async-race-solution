@@ -1,10 +1,13 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { AppDispatch } from './store.ts'; //eslint-disable-line
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'; //eslint-disable-line
+import { AppDispatch, RootState } from './store.ts'; //eslint-disable-line
 
 interface Car {
 	id: number;
 	name: string;
 	color: string;
+	isDriving?: boolean;
+	position?: number;
+	animationDuration?: string;
 }
 
 interface CarState {
@@ -12,6 +15,7 @@ interface CarState {
 	status: 'idle' | 'loading' | 'succeeded' | 'failed';
 	error: string | null;
 	currentCar: Car | null;
+	isRacing: boolean;
 }
 
 const initialState: CarState = {
@@ -19,6 +23,7 @@ const initialState: CarState = {
 	status: 'idle',
 	error: null,
 	currentCar: null,
+	isRacing: false,
 };
 const randomName = () => {
 	const names = [
@@ -74,6 +79,7 @@ export const fetchCarById = createAsyncThunk(
 		return response.json();
 	}
 );
+
 export const createCar = createAsyncThunk(
 	'cars/createCar',
 	async ({ name, color }: { name: string; color: string }) => {
@@ -118,10 +124,110 @@ export const deleteCar = createAsyncThunk<void, number>(
 		}
 	}
 );
+
+export const startRace = createAsyncThunk<
+	void,
+	void,
+	{ dispatch: AppDispatch; state: RootState }
+>('cars/startRace', async (_, { dispatch, getState }) => {
+	const { cars } = getState().cars;
+	dispatch(setIsRacing(true));//eslint-disable-line
+
+	try {
+		// Start engines for all cars
+		const startRequests = cars.map(async (car) => {
+			const response = await fetch(
+				`http://localhost:3000/engine?id=${car.id}&status=started`,
+				{ method: 'PATCH' }
+			);
+			if (!response.ok)
+				throw new Error(`Failed to start engine for car ${car.id}`);
+			const data = await response.json();
+			const { velocity, distance } = data;
+			const duration = distance / velocity / 1000;//eslint-disable-line
+			dispatch(
+				updateCarAnimationDuration({//eslint-disable-line
+					id: car.id,
+					animationDuration: `${duration}s`,
+				})
+			);
+			return { car, duration };
+		});
+
+		const startResults = await Promise.all(startRequests);
+
+		// Drive all cars
+		const driveRequests = startResults.map(async ({ car }) => {
+			const response = await fetch(
+				`http://localhost:3000/engine?id=${car.id}&status=drive`,
+				{ method: 'PATCH' }
+			);
+			if (!response.ok) throw new Error(`Failed to drive car ${car.id}`);
+			dispatch(updateCarStatus({ id: car.id, isDriving: true }));//eslint-disable-line
+		});
+
+		await Promise.all(driveRequests);
+		// Trigger animation for all cars
+		startResults.forEach(({ car }) => {
+			dispatch(startCarAnimation(car.id));//eslint-disable-line
+		});
+	} catch (error) {
+		console.error('Error starting race:', error);
+		// Handle error: stop all cars if any request fails
+		cars.forEach((car) => {
+			dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+			dispatch(
+				updateCarAnimationDuration({ id: car.id, animationDuration: undefined })//eslint-disable-line
+			);
+		});
+		dispatch(setIsRacing(false));//eslint-disable-line
+	}
+});
+
+export const resetRace = createAsyncThunk<
+	void,
+	void,
+	{ dispatch: AppDispatch }
+>('cars/resetRace', async (_, { dispatch }) => {
+	dispatch(setIsRacing(false)); //eslint-disable-line
+	dispatch(resetAllCars()); //eslint-disable-line
+});
 const carSlice = createSlice({
 	name: 'cars',
 	initialState,
-	reducers: {},
+	reducers: {
+		setIsRacing(state, action: PayloadAction<boolean>) {
+			state.isRacing = action.payload;
+		},
+		updateCarStatus(
+			state,
+			action: PayloadAction<{ id: number; isDriving: boolean }>
+		) {
+			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+			if (car) car.isDriving = action.payload.isDriving;
+		},
+		updateCarAnimationDuration(
+			state,
+			action: PayloadAction<{ id: number; animationDuration?: string }>
+		) {
+			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+			if (car) car.animationDuration = action.payload.animationDuration;
+		},
+		startCarAnimation(state, action: PayloadAction<number>) {
+			const car = state.cars.find((car) => car.id === action.payload); //eslint-disable-line
+			if (car) {
+				car.position = 1;
+				car.isDriving = true;
+			} // Set to some value to trigger CSS animation
+		},
+		resetAllCars(state) {
+			state.cars.forEach((car) => {
+				car.isDriving = false;
+				car.position = 0; // Assuming initial position is 0
+				car.animationDuration = undefined;
+			});
+		},
+	},
 	extraReducers: (builder) => {
 		builder
 			.addCase(fetchCars.pending, (state) => {
@@ -162,5 +268,11 @@ const carSlice = createSlice({
 			});
 	},
 });
-
+export const {
+	setIsRacing,
+	updateCarStatus,
+	resetAllCars,
+	updateCarAnimationDuration,
+	startCarAnimation,
+} = carSlice.actions;
 export default carSlice.reducer;

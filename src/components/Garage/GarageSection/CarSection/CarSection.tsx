@@ -1,28 +1,61 @@
 import * as React from 'react';
-import { useState } from 'react';
+// import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux'; //eslint-disable-line
+import {
+	updateCarStatus,
+	updateCarAnimationDuration,
+} from '../../../../store/carSlice.ts';
+import { AppDispatch, RootState } from '../../../../store/store.ts';
 // import Button from '../../../Button/Button.tsx';
 import CarControlPanel from './CarControlPanel.tsx';
 import './CarContolPanel.css';
 
+interface ExtendedCSSProperties extends React.CSSProperties {
+	'--duration'?: string;
+}
 interface CarSectionProps {
 	onSelectCar: (id: number) => void;
 	car: { id: number; name: string; color: string };
+	// isRacing: boolean;
 }
-const CarSection: React.FC<CarSectionProps> = ({ onSelectCar, car }) => {
-	const [isDriving, setIsDriving] = useState(false);
-	const [carStyle, setCarStyle] = useState<{ animationDuration?: string }>({});
+const CarSection: React.FC<CarSectionProps> = ({
+	onSelectCar,
+	car,
+	// isRacing,
+}) => {
+	const dispatch = useDispatch<AppDispatch>();
+	const isDriving = useSelector(
+		(state: RootState) =>
+			state.cars.cars.find((c) => c.id === car.id)?.isDriving
+	);
+	const animationDuration = useSelector(
+		(state: RootState) =>
+			state.cars.cars.find((c) => c.id === car.id)?.animationDuration
+	);
+	const carStyle: ExtendedCSSProperties = {
+		'--duration': animationDuration,
+	};
+	// const [isDriving, setIsDriving] = useState(false);
+	// const [carStyle, setCarStyle] = useState<{ animationDuration?: string }>({});
+
 	const handleSelect = () => {
 		onSelectCar(car.id);
 	};
-	const handleStartDriving = (style: { animationDuration?: string }) => {
-		setIsDriving(true);
-		setCarStyle(style);
+	const handleStartDriving = () => {
+		dispatch(
+			updateCarAnimationDuration({ id: car.id, animationDuration: '2s' })
+		);
+		console.log('in car section, start driving', car.id, animationDuration);
+		dispatch(updateCarStatus({ id: car.id, isDriving: true }));
 	};
 
 	const handleStopDriving = () => {
-		setIsDriving(false);
-		setCarStyle({});
+		dispatch(
+			updateCarAnimationDuration({ id: car.id, animationDuration: undefined })
+		);
+		dispatch(updateCarStatus({ id: car.id, isDriving: false }));
 	};
+
 	return (
 		<div
 			className='car-card'

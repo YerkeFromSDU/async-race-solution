@@ -23,7 +23,6 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 	const [status, setStatus] = useState<'stopped' | 'started' | 'driving'>(
 		'stopped'
 	);
-	// const [carStyle, setCarStyle] = useState<{ animationDuration?: string }>({});
 
 	const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
@@ -60,18 +59,24 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 			const duration = distance / velocity / seconds;
 			console.log(duration);
 			onStartDriving({ animationDuration: `${duration}s` });
-
-			const driveResponse = await fetch(
-				`http://localhost:3000/engine?id=${carId}&status=drive`,
-				{
-					method: 'PATCH',
+			try {
+				const driveResponse = await fetch(
+					`http://localhost:3000/engine?id=${carId}&status=drive`,
+					{
+						method: 'PATCH',
+					}
+				);
+				console.log(driveResponse);
+				if (driveResponse.status === 500) { //eslint-disable-line
+					setStatus('stopped');
+					onStopDriving();
 				}
-			);
-			// const driveData = await driveResponse.json();
-
-			if (!driveResponse.ok) throw new Error('Failed to drive');
-
-			setStatus('driving');
+				setStatus('driving');
+			} catch (error) {
+				setStatus('stopped');
+				onStopDriving();
+				throw new Error('Failed to drive');
+			}
 		} catch (error) {
 			console.error('Error starting engine:', error);
 			setStatus('stopped');

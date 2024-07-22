@@ -1,4 +1,4 @@
-.car-line.driving svg {
+/* .car-line.driving svg {
     position: absolute;
     top: 0.7rem;
     left: 0.7rem;
@@ -13,10 +13,26 @@
     100% {
         left: calc(100% - 5rem);
     }
-    /* from {
-        transform: translateX(0);
+} */
+
+.car-line svg {
+    position: absolute;
+    top: 0.7rem;
+    left: 0.7rem;
+}
+
+.car-line.driving svg {
+    animation: drive var(--duration) linear forwards;
+}
+
+.car-line {
+    width: 100%;
+    position: relative;
+    border: 1px solid red;
+}
+
+@keyframes drive {
+    100% {
+        left: calc(100% - 5rem);
     }
-    to {
-        transform: translateX(100%);
-    } */
 }
