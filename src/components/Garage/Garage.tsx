@@ -16,7 +16,7 @@ function Garage() {
 		setSelectedCarId(id);
 	};
 	const handleGenerateCars = () => {
-		dispatch(generateCars()); // Generate 100 random cars
+		dispatch(generateCars());
 	};
 	return (
 		<div className='garage-container'>

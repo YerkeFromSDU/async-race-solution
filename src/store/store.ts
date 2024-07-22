@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import carReducer from './carSlice.ts';
+import carReducer from './carSlice.ts';//eslint-disable-line
+import winnerReducer from './winnerSlice.ts';
 
 export const store = configureStore({
 	reducer: {
 		cars: carReducer,
+		winners: winnerReducer,
 	},
 });
 
