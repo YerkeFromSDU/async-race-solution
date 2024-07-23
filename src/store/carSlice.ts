@@ -124,7 +124,6 @@ export const deleteCar = createAsyncThunk<void, number>(
 		}
 	}
 );
-
 export const startRace = createAsyncThunk<
 	void,
 	void,
@@ -136,40 +135,65 @@ export const startRace = createAsyncThunk<
 	try {
 		// Start engines for all cars
 		const startRequests = cars.map(async (car) => {
-			const response = await fetch(
-				`http://localhost:3000/engine?id=${car.id}&status=started`,
-				{ method: 'PATCH' }
-			);
-			if (!response.ok)
-				throw new Error(`Failed to start engine for car ${car.id}`);
-			const data = await response.json();
-			const { velocity, distance } = data;
-			const duration = distance / velocity / 1000;//eslint-disable-line
-			dispatch(
-				updateCarAnimationDuration({//eslint-disable-line
-					id: car.id,
-					animationDuration: `${duration}s`,
-				})
-			);
-			return { car, duration };
+			try {
+				const response = await fetch(
+					`http://localhost:3000/engine?id=${car.id}&status=started`,
+					{ method: 'PATCH' }
+				);
+				if (!response.ok)
+					throw new Error(`Failed to start engine for car ${car.id}`);
+				const data = await response.json();
+				const { velocity, distance } = data;
+				const duration = distance / velocity / 1000;//eslint-disable-line
+				dispatch(
+					updateCarAnimationDuration({//eslint-disable-line
+						id: car.id,
+						animationDuration: `${duration}s`,
+					})
+				);
+				return { car, duration };
+			} catch (error) {
+				console.error(`Error starting engine for car ${car.id}:`, error);
+				dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+				return null;
+			}
 		});
 
 		const startResults = await Promise.all(startRequests);
 
 		// Drive all cars
-		const driveRequests = startResults.map(async ({ car }) => {
-			const response = await fetch(
-				`http://localhost:3000/engine?id=${car.id}&status=drive`,
-				{ method: 'PATCH' }
-			);
-			if (!response.ok) throw new Error(`Failed to drive car ${car.id}`);
-			dispatch(updateCarStatus({ id: car.id, isDriving: true }));//eslint-disable-line
+		const driveRequests = startResults.map(async (result) => {
+			if (result) {
+				const { car } = result;
+				try {
+					const response = await fetch(
+						`http://localhost:3000/engine?id=${car.id}&status=drive`,
+						{ method: 'PATCH' }
+					);
+					if (!response.ok) throw new Error(`Failed to drive car ${car.id}`);
+					dispatch(updateCarStatus({ id: car.id, isDriving: true }));//eslint-disable-line
+					return car.id;
+				} catch (error) {
+					console.error(`Error driving car ${car.id}:`, error);
+					dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+					dispatch(
+						updateCarAnimationDuration({//eslint-disable-line
+							id: car.id,
+							animationDuration: undefined,
+						})
+					);
+					return null;
+				}
+			}
+			return null;
 		});
 
-		await Promise.all(driveRequests);
-		// Trigger animation for all cars
-		startResults.forEach(({ car }) => {
-			dispatch(startCarAnimation(car.id));//eslint-disable-line
+		const driveResults = await Promise.all(driveRequests);
+
+		driveResults.forEach((carId) => {
+			if (carId !== null) {
+				dispatch(startCarAnimation(carId));//eslint-disable-line
+			}
 		});
 	} catch (error) {
 		console.error('Error starting race:', error);
