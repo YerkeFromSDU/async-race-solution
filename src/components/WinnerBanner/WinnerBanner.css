@@ -1,0 +1,36 @@
+.winner-banner{
+    position: fixed;
+    background-color: #ffffff;
+    color: black;
+    text-align: center;
+    padding: 25px;
+    z-index: 1000;
+    inset: 0;
+    width: 20rem;
+    height: 10rem;
+    max-width: 100vw;
+    max-height: 100dvh;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.543);
+    border: 1px solid #ff00ff;
+    border-radius: 10px;
+    color: #edff47;
+    cursor: pointer;
+    box-shadow: 0 0 5px #ff00ff, 0 0 5px #ff00ff, 0 0 5px #ff00ff;
+}
+.winner-banner h2,p{
+    font-family: 'Beon';
+    letter-spacing: 4px;
+}
+h2{
+    margin: 6px;
+    font-size: 29px;
+}
+p{
+    margin: 10px;
+    font-size: 20px;
+}

@@ -1,8 +1,28 @@
+.garage-container{
+    width: 80%;
+    margin: auto;
+}
+.create-panel form, .update-panel form{
+    width: 300px;
+    display: flex;
+    justify-content: space-around;
+}
+.create-panel form input, .update-panel form input{
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    box-shadow: 0 0 5px #00ff00, 0 0 5px #00ff00, 0 0 5px #00ff00;
+}
 .panel-container{
     display: flex;
     justify-content: space-between;
 }
-.garage-container{
-    width: 80%;
-    margin: auto;
+.panel-container Button, input{
+    font-family: 'Beon';
+    margin-right: 10px;
+}
+.panel-container Button{
+    width: 80px;
+}
+.generation-panel Button{
+    margin-right: -10px;
 }

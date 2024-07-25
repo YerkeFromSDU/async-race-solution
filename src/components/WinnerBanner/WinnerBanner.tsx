@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux'; //eslint-disable-line
 import { RootState } from '../../store/store.ts';
+import './WinnerBanner.css';
 
 const WinnerBanner = () => {
 	const winner = useSelector((state: RootState) => state.cars.winner);
@@ -9,27 +10,12 @@ const WinnerBanner = () => {
 	);
 
 	if (!raceFinished || !winner) return null;
-
+	const finishTime = Math.ceil(winner.finishTime);
 	return (
-		<div
-			style={{
-				position: 'fixed',
-				backgroundColor: '#ffffff',
-				color: 'black',
-				textAlign: 'center',
-				padding: '10px',
-				zIndex: 1000,
-				inset: 0,
-				width: '12rem',
-				height: '10rem',
-				maxWidth: '100vw',
-				maxHeight: '100dvh',
-				margin: 'auto',
-			}}
-		>
+		<div className='winner-banner'>
 			<h2>Winner!</h2>
-			<h3>{winner.name}</h3>
-			<p>Time: {winner.finishTime}</p>
+			<h2>{`>>> ${winner.name} <<<`}</h2>
+			<h2>Time: {finishTime} seconds</h2>
 		</div>
 	);
 };

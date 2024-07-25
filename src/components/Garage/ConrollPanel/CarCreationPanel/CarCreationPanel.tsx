@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux'; //eslint-disable-line
 import { AppDispatch, RootState } from '../../../../store/store.ts';
 import {
 	createCar,
@@ -8,6 +8,7 @@ import {
 	fetchCarById,
 } from '../../../../store/carSlice.ts';
 import Button from '../../../Button/Button.tsx';
+import '../../Garage.css';
 
 interface CarCreationPanelProps {
 	selectedCarId: number | null;
@@ -26,7 +27,6 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 		if (selectedCarId) {
 			dispatch(fetchCarById(selectedCarId));
 		} else {
-			// Reset fields when no car is selected
 			setUpdateName('');
 			setUpdateColor('#000000');
 		}
@@ -66,6 +66,7 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 			<div className='create-panel'>
 				<form action=''>
 					<input
+						style={{ paddingLeft: 10, width: 150 }}
 						type='text'
 						value={createName}
 						onChange={(e) => setCreateName(e.target.value)}
@@ -82,6 +83,7 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 			<div className='update-panel'>
 				<form>
 					<input
+						style={{ paddingLeft: 10, width: 150 }}
 						type='text'
 						value={updateName}
 						onChange={(e) => setUpdateName(e.target.value)}

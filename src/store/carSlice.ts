@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'; //eslint-disable-line
 import { AppDispatch, RootState } from './store.ts'; //eslint-disable-line
+// import { updateWinner, createWinner, fetchWinnerById } from './winnerSlice.ts';
+import { useDispatch } from 'react-redux'; //eslint-disable-line
 
 interface Car {
 	id: number;
@@ -286,9 +288,39 @@ const carSlice = createSlice({
 			action: PayloadAction<{ id: number; time: number }>
 		) {
 			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+
 			if (car) {
-				// car.isDriving = false;
 				car.finishTime = action.payload.time;
+
+				// const winningCar = cars.reduce((prev, current) => {
+				// 	return prev.finishTime < current.finishTime ? prev : current;
+				// });
+
+				// if (winningCar) {
+				// Create or update the winner in the server
+				// const existingWinner = await dispatch(
+				// 	fetchWinnerById(winningCar.id)
+				// ).unwrap();
+				// if (existingWinner) {
+				// Update winner if it already exists
+				// dispatch(
+				// 	updateWinner({
+				// 		id: existingWinner.id,
+				// 		time: winningCar.finishTime!,
+				// 		wins: (winningCar.wins || 0) + 1,
+				// 	})
+				// );
+				// } else {
+				// Create new winner if it doesn't exist
+				// dispatch(
+				// 	createWinner({
+				// 		id: winningCar.id,
+				// 		name: winningCar.name,
+				// 		wins: (winningCar.wins || 0) + 1,
+				// 	})
+				// );
+				// }
+				// }
 			}
 			if (
 				!state.winner ||

@@ -97,14 +97,21 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 
 	return (
 		<div
-			className='car-card'
-			style={{ width: '20%', display: 'flex', flexDirection: 'row' }}
+			className='control-container'
+			style={{ width: '15%', display: 'flex', flexDirection: 'row' }}
 		>
 			<div style={{ width: 100, display: 'flex', flexDirection: 'column' }}>
 				<Button title='SELECT' onClick={() => handleClick('select')} />
 				<Button title='REMOVE' onClick={handleDelete} />
 			</div>
-			<div style={{ width: 40, display: 'flex', flexDirection: 'column' }}>
+			<div
+				style={{
+					width: 40,
+					display: 'flex',
+					flexDirection: 'column',
+					marginLeft: 10,
+				}}
+			>
 				<button
 					type='button'
 					onClick={handleStartEngine}

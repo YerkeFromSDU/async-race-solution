@@ -8,7 +8,7 @@ import './App.css';
 
 function App() {
 	return (
-		<div>
+		<div className='background-container'>
 			<Header />
 			<Routes>
 				<Route path='/garage' element={<Garage />} />
