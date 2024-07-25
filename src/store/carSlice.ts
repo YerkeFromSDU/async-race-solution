@@ -8,6 +8,7 @@ interface Car {
 	isDriving?: boolean;
 	position?: number;
 	animationDuration?: string;
+	finishTime?: number;
 }
 
 interface CarState {
@@ -16,6 +17,8 @@ interface CarState {
 	error: string | null;
 	currentCar: Car | null;
 	isRacing: boolean;
+	winner: Car | null;
+	raceFinished: boolean;
 }
 
 const initialState: CarState = {
@@ -24,6 +27,8 @@ const initialState: CarState = {
 	error: null,
 	currentCar: null,
 	isRacing: false,
+	winner: null,
+	raceFinished: false,
 };
 const randomName = () => {
 	const names = [
@@ -129,7 +134,8 @@ export const startRace = createAsyncThunk<
 	void,
 	{ dispatch: AppDispatch; state: RootState }
 >('cars/startRace', async (_, { dispatch, getState }) => {
-	const { cars } = getState().cars;
+	const { cars, isRacing } = getState().cars;
+	if (isRacing) return;
 	dispatch(setIsRacing(true));//eslint-disable-line
 
 	try {
@@ -164,7 +170,7 @@ export const startRace = createAsyncThunk<
 		// Drive all cars
 		const driveRequests = startResults.map(async (result) => {
 			if (result) {
-				const { car } = result;
+				const { car, duration } = result; //eslint-disable-line
 				try {
 					const response = await fetch(
 						`http://localhost:3000/engine?id=${car.id}&status=drive`,
@@ -172,6 +178,11 @@ export const startRace = createAsyncThunk<
 					);
 					if (!response.ok) throw new Error(`Failed to drive car ${car.id}`);
 					dispatch(updateCarStatus({ id: car.id, isDriving: true }));//eslint-disable-line
+
+					setTimeout(() => {
+						dispatch(finishRaceForCar({ id: car.id, time: duration })); //eslint-disable-line
+					}, duration * 1000); //eslint-disable-line
+
 					return car.id;
 				} catch (error) {
 					console.error(`Error driving car ${car.id}:`, error);
@@ -195,6 +206,23 @@ export const startRace = createAsyncThunk<
 				dispatch(startCarAnimation(carId));//eslint-disable-line
 			}
 		});
+
+		const maxDuration = Math.max(
+			...startResults.map((result) => (result ? result.duration : 0))
+		);
+		setTimeout(
+			() => {
+				const { cars } = getState().cars;//eslint-disable-line
+				const finishedCars = cars.filter((car) => car.finishTime !== undefined);
+				if (finishedCars.length > 0) {
+					const winner = finishedCars.reduce((prev, current) => {
+						return prev.finishTime! < current.finishTime! ? prev : current;
+					});
+					dispatch(setWinner(winner)); //eslint-disable-line
+				}
+			},
+			(maxDuration + 1) * 1000 //eslint-disable-line
+		);
 	} catch (error) {
 		console.error('Error starting race:', error);
 		// Handle error: stop all cars if any request fails
@@ -250,6 +278,28 @@ const carSlice = createSlice({
 				car.position = 0; // Assuming initial position is 0
 				car.animationDuration = undefined;
 			});
+			state.winner = null;
+			state.raceFinished = false;
+		},
+		finishRaceForCar(
+			state,
+			action: PayloadAction<{ id: number; time: number }>
+		) {
+			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+			if (car) {
+				// car.isDriving = false;
+				car.finishTime = action.payload.time;
+			}
+			if (
+				!state.winner ||
+				(car && car.finishTime! < state.winner.finishTime!)
+			) {
+				state.winner = car!;
+			}
+			state.raceFinished = true;
+		},
+		setWinner(state, action: PayloadAction<Car>) {
+			state.winner = action.payload;
 		},
 	},
 	extraReducers: (builder) => {
@@ -298,5 +348,7 @@ export const {
 	resetAllCars,
 	updateCarAnimationDuration,
 	startCarAnimation,
+	finishRaceForCar,
+	setWinner,
 } = carSlice.actions;
 export default carSlice.reducer;

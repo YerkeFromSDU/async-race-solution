@@ -8,6 +8,7 @@ import GarageSection from './GarageSection/GarageSection.tsx';
 import { generateCars } from '../../store/carSlice.ts';
 import Button from '../Button/Button.tsx';
 import './Garage.css';
+import WinnerBanner from '../WinnerBanner/WinnerBanner.tsx';
 
 function Garage() {
 	const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
@@ -20,21 +21,11 @@ function Garage() {
 	const handleGenerateCars = () => {
 		dispatch(generateCars());
 	};
-
-	// const handleRace = () => {
-	// 	// setIsRacing(true);
-	// 	dispatch(startRace() as any); //eslint-disable-line
-	// };
-
-	// const handleReset = () => {
-	// 	// setIsRacing(false);
-	// 	dispatch(resetRace() as any); //eslint-disable-line
-	// 	// Logic to reset all cars
-	// };
 	return (
 		<div className='garage-container'>
 			<div className='panel-container'>
 				<RaceControlPanel />
+				<WinnerBanner />
 				<CarCreationPanel selectedCarId={selectedCarId} />
 				<div className='generation-panel'>
 					<Button title='GENERATE' onClick={handleGenerateCars} />

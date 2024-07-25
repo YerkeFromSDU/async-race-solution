@@ -36,6 +36,7 @@ const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 					/>
 				))}
 			</div>
+
 			<ul
 				className='pagination'
 				style={{
