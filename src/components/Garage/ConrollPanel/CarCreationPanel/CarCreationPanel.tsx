@@ -20,6 +20,7 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 	const dispatch = useDispatch<AppDispatch>();
 	const currentCar = useSelector((state: RootState) => state.cars.currentCar);
 	const inputValues = useSelector((state: RootState) => state.view.inputValues);
+	const isRacing = useSelector((state: RootState) => state.cars.isRacing);
 
 	useEffect(() => {
 		if (selectedCarId) {
@@ -98,7 +99,11 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 						value={inputValues.createColor || '#000000'}
 						onChange={handleInputChange}
 					/>
-					<Button title='CREATE' onClick={handleCreateClick} />
+					<Button
+						title='CREATE'
+						onClick={handleCreateClick}
+						disabled={isRacing}
+					/>
 				</form>
 			</div>
 			<div className='update-panel'>
@@ -117,7 +122,11 @@ const CarCreationPanel: React.FC<CarCreationPanelProps> = ({
 						value={inputValues.updateColor || '#000000'}
 						onChange={handleInputChange}
 					/>
-					<Button title='UPDATE' onClick={handleUpdateClick} />
+					<Button
+						title='UPDATE'
+						onClick={handleUpdateClick}
+						disabled={isRacing}
+					/>
 				</form>
 			</div>
 		</>

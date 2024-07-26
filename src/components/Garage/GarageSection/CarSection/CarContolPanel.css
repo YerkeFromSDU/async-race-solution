@@ -4,12 +4,14 @@
 .control-container button{
     height: 25px;
     font-size: 12px;
-    /* background-color: 'transparent'; */
     border: 1px solid #00ff00;
     border-radius: 10px;
     color: #000000;
     cursor: pointer;
     box-shadow: 0 0 5px #00ff00, 0 0 5px #00ff00, 0 0 5px #00ff00;
+}
+.control-container button:disabled{
+    cursor: not-allowed;
 }
 /* //====================== */
 .car-card {
@@ -55,6 +57,7 @@
     position: absolute;
     top: 0.7rem;
     left: 1.7rem;
+    z-index: 1000;
 }
 
 .car-line.driving svg {

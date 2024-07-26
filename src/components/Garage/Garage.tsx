@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux'; //eslint-disable-line
-import { AppDispatch } from '../../store/store.ts';
+import { useDispatch, useSelector } from 'react-redux'; //eslint-disable-line
+import { AppDispatch, RootState } from '../../store/store.ts';
 import RaceControlPanel from './ConrollPanel/RaceControlPanel/RaceControlPanel.tsx';
 import CarCreationPanel from './ConrollPanel/CarCreationPanel/CarCreationPanel.tsx';
 import GarageSection from './GarageSection/GarageSection.tsx';
@@ -13,7 +13,7 @@ import WinnerBanner from '../WinnerBanner/WinnerBanner.tsx';
 function Garage() {
 	const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
 	const dispatch = useDispatch<AppDispatch>();
-	// const [isRacing, setIsRacing] = useState(false);
+	const isRacing = useSelector((state: RootState) => state.cars.isRacing);
 
 	const handleSelectCar = (id: number) => {
 		setSelectedCarId(id);
@@ -28,7 +28,11 @@ function Garage() {
 				<WinnerBanner />
 				<CarCreationPanel selectedCarId={selectedCarId} />
 				<div className='generation-panel'>
-					<Button title='GENERATE' onClick={handleGenerateCars} />
+					<Button
+						title='GENERATE'
+						onClick={handleGenerateCars}
+						disabled={isRacing}
+					/>
 				</div>
 			</div>
 			<GarageSection onSelectCar={handleSelectCar} />

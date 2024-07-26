@@ -47,6 +47,21 @@ const randomName = () => {
 	];
 	return names[Math.floor(Math.random() * names.length)];
 };
+const randomModel = () => {
+	const models = [
+		'Mustang',
+		'Camry',
+		'X5',
+		'A4',
+		'E-Class',
+		'911',
+		'Altima',
+		'Elantra',
+		'MX-5',
+		'Continental',
+	];
+	return models[Math.floor(Math.random() * models.length)];
+};
 const randomColor = () => {
 	const colors = [
 		'#CAFC56',
@@ -68,7 +83,7 @@ export const generateCars = createAsyncThunk<
 >('cars/generateCars', async (_, { dispatch }) => {
 	for (let i = 1; i <= 100; i++) { //eslint-disable-line
 		const car = {
-			name: randomName(),
+			name: `${randomName()} ${randomModel()}`,
 			color: randomColor(),
 		};
 		await dispatch(createCar(car)); //eslint-disable-line

@@ -1,0 +1,6 @@
+.uni-button{
+    cursor: pointer;
+};
+.uni-button:disabled{
+    cursor: not-allowed;
+}

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux'; //eslint-disable-line
-import { AppDispatch } from '../../../../store/store.ts';
+import { useDispatch, useSelector } from 'react-redux'; //eslint-disable-line
+import { AppDispatch, RootState } from '../../../../store/store.ts';
 import Button from '../../../Button/Button.tsx';
 import { deleteCar, fetchCars } from '../../../../store/carSlice.ts';
 import './CarContolPanel.css';
@@ -20,6 +20,7 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 	onStopDriving,
 }) => {
 	const dispatch = useDispatch<AppDispatch>();
+	const isRacing = useSelector((state: RootState) => state.cars.isRacing);
 	const [status, setStatus] = useState<'stopped' | 'started' | 'driving'>(
 		'stopped'
 	);
@@ -101,8 +102,12 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 			style={{ width: '15%', display: 'flex', flexDirection: 'row' }}
 		>
 			<div style={{ width: 100, display: 'flex', flexDirection: 'column' }}>
-				<Button title='SELECT' onClick={() => handleClick('select')} />
-				<Button title='REMOVE' onClick={handleDelete} />
+				<Button
+					title='SELECT'
+					onClick={() => handleClick('select')}
+					disabled={isRacing}
+				/>
+				<Button title='REMOVE' onClick={handleDelete} disabled={isRacing} />
 			</div>
 			<div
 				style={{
@@ -115,7 +120,7 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 				<button
 					type='button'
 					onClick={handleStartEngine}
-					disabled={status === 'driving'}
+					disabled={status === 'driving' || isRacing}
 				>
 					A
 				</button>

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-// import Button from '../Button/Button.tsx';
+import { useSelector } from 'react-redux'; //eslint-disable-line
+import { RootState } from '../../store/store.ts';
 import Logo from './Logo/Logo.tsx';
 import './Header.css';
 
@@ -8,6 +9,7 @@ export interface HeaderProps {}
 
 export default function Header() {
 	const navigate = useNavigate();
+	const isRacing = useSelector((state: RootState) => state.cars.isRacing);
 	const handleNavToGarage = () => navigate('/garage');
 	const handleNavToWinner = () => navigate('/winner');
 	return (
@@ -17,6 +19,7 @@ export default function Header() {
 					className='routes-buttons'
 					type='button'
 					onClick={handleNavToGarage}
+					disabled={isRacing}
 				>
 					GARAGE
 				</button>
@@ -24,6 +27,7 @@ export default function Header() {
 					className='routes-buttons'
 					type='button'
 					onClick={handleNavToWinner}
+					disabled={isRacing}
 				>
 					WINNER
 				</button>
