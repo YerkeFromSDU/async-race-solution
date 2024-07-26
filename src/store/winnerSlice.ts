@@ -1,6 +1,9 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'; //eslint-disable-line
+import { createSlice, createAsyncThunk,PayloadAction } from '@reduxjs/toolkit'; //eslint-disable-line
+import { AppDispatch, RootState } from './store.ts'; //eslint-disable-line
 interface Winner {
 	id: number;
+	name?: string;
+	color?: string;
 	time: number;
 	wins: number;
 }
@@ -19,10 +22,18 @@ const initialState: WinnerState = {
 };
 export const fetchWinners = createAsyncThunk(
 	'winners/fetchWinners',
-	async () => {
+	async (_, { getState }) => {
 		const response = await fetch('http://localhost:3000/winners');
+		const { cars } = (getState() as RootState).cars;
 		const data = await response.json();
-		return data;
+		return data.map((winner: any) => { //eslint-disable-line
+			const car = cars.find((car) => car.id === winner.id);//eslint-disable-line
+			return {
+				...winner,
+				name: car ? car.name : 'Unknown',
+				color: car ? car.color : '#000000',
+			};
+		});
 	}
 );
 export const fetchWinnerById = createAsyncThunk(
@@ -68,10 +79,68 @@ export const updateWinner = createAsyncThunk(
 		return response.json();
 	}
 );
+export const deleteZeroWinsWinners = createAsyncThunk<number[], void>(
+	'winners/deleteZeroWinsWinners',
+	async (_, { dispatch, getState, rejectWithValue }) => { //eslint-disable-line
+		try {
+			// Fetch all winners
+			const response = await fetch('http://localhost:3000/winners');
+			if (!response.ok) {
+				throw new Error('Failed to fetch winners.');
+			}
+			const winners = await response.json();
+
+			// Find winners with 0 wins
+			const zeroWinsWinners = winners.filter(
+				(winner: any) => winner.wins === 0 //eslint-disable-line
+			);
+
+			// Delete each winner with 0 wins
+			const deleteRequests = zeroWinsWinners.map(async (winner: any) => { //eslint-disable-line
+				const deleteResponse = await fetch(
+					`http://localhost:3000/winners/${winner.id}`,
+					{
+						method: 'DELETE',
+					}
+				);
+				if (!deleteResponse.ok) {
+					throw new Error(`Failed to delete winner with ID ${winner.id}`);
+				}
+			});
+
+			await Promise.all(deleteRequests);
+
+			// Return the IDs of the deleted winners
+			return zeroWinsWinners.map((winner: any) => winner.id); //eslint-disable-line
+		} catch (error) {
+			return rejectWithValue(error.message);
+		}
+	}
+);
 const winnerSlice = createSlice({
 	name: 'winners',
 	initialState,
-	reducers: {},
+	reducers: {
+		addOrUpdateWinner(
+			state,
+			action: PayloadAction<{ id: number; time: number; wins: number }>
+		) {
+			// const { id, time } = action.payload;
+			const winner = action.payload;
+			const existingWinner = state.items.find((w) => w.id === winner.id);//eslint-disable-line
+			if (existingWinner) {
+				existingWinner.wins = winner.wins;
+				existingWinner.time = winner.time;
+				// if (time < existingWinner.time) {
+				// 	existingWinner.time = time;
+				// }
+				// existingWinner.wins += 1;
+			} else {
+				// state.items.push({ ...action.payload, wins: 1 });
+				state.items.push(winner);
+			}
+		},
+	},
 	extraReducers: (builder) => {
 		builder
 			.addCase(fetchWinners.pending, (state) => {
@@ -111,18 +180,34 @@ const winnerSlice = createSlice({
 				state.error = action.error.message;
 			})
 			.addCase(updateWinner.fulfilled, (state, action) => {
-				const index = state.items.findIndex(
-					(winner) => winner.id === action.payload.id
+				const updatedWinner = action.payload;
+				const existingWinner = state.items.find(
+					(w) => w.id === updatedWinner.id
 				);
-				if (index >= 0) {
-					state.items[index] = action.payload;
+				if (existingWinner) {
+					existingWinner.wins = updatedWinner.wins;
+					existingWinner.time = updatedWinner.time;
 				}
 			})
 			.addCase(updateWinner.rejected, (state, action) => {
 				state.status = 'failed';
 				state.error = action.error.message;
+			})
+			.addCase(deleteZeroWinsWinners.pending, (state) => {
+				state.status = 'loading';
+			})
+			.addCase(deleteZeroWinsWinners.fulfilled, (state, action) => {
+				state.status = 'succeeded';
+				// Remove winners with 0 wins from state
+				state.items = state.items.filter(
+					(winner) => !action.payload.includes(winner.id)
+				);
+			})
+			.addCase(deleteZeroWinsWinners.rejected, (state, action) => {
+				state.status = 'failed';
+				state.error = action.payload as string;
 			});
 	},
 });
-
+export const { addOrUpdateWinner } = winnerSlice.actions;
 export default winnerSlice.reducer;

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'; //eslint-disable-line
 import { AppDispatch, RootState } from './store.ts'; //eslint-disable-line
-// import { updateWinner, createWinner, fetchWinnerById } from './winnerSlice.ts';
+import { updateWinner, addWinner, addOrUpdateWinner,deleteZeroWinsWinners } from './winnerSlice.ts'; //eslint-disable-line
 import { useDispatch } from 'react-redux'; //eslint-disable-line
 import { randomName, randomModel, randomColor } from '../carUtils.ts';
 
@@ -186,7 +186,7 @@ export const startRace = createAsyncThunk<
 			...startResults.map((result) => (result ? result.duration : 0))
 		);
 		setTimeout(
-			() => {
+			async () => {
 				const { cars } = getState().cars;//eslint-disable-line
 				const finishedCars = cars.filter((car) => car.finishTime !== undefined);
 				if (finishedCars.length > 0) {
@@ -194,13 +194,37 @@ export const startRace = createAsyncThunk<
 						return prev.finishTime! < current.finishTime! ? prev : current;
 					});
 					dispatch(setWinner(winner)); //eslint-disable-line
+					// Prepare winner data
+					const winnerData = {
+						id: winner.id,
+						time: winner.finishTime!,
+						wins: 0, // Initial wins count
+					};
+					const state = getState();
+					const existingWinner = state.winners.items.find(
+						(w) => w.id === winner.id
+					);
+					if (existingWinner) {
+						// Update existing winner
+						winnerData.wins = existingWinner.wins + 1;
+						await dispatch(updateWinner(winnerData)).unwrap();
+					} else {
+						// Add new winner
+						winnerData.wins = 1;
+						await dispatch(addWinner(winnerData)).unwrap();
+					}
+					dispatch(deleteZeroWinsWinners());
+					// Dispatch add or update winner
+					dispatch(addOrUpdateWinner(winnerData)); //eslint-disable-line
+					// dispatch(addWinner(winnerData)); //eslint-disable-line
+					// dispatch(updateWinner(winnerData)); //eslint-disable-line
 				}
 			},
 			(maxDuration + 1) * 1000 //eslint-disable-line
 		);
 	} catch (error) {
 		console.error('Error starting race:', error);
-		// Handle error: stop all cars if any request fails
+		// stop all cars if any request fails
 		cars.forEach((car) => {
 			dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
 			dispatch(
@@ -264,36 +288,6 @@ const carSlice = createSlice({
 
 			if (car) {
 				car.finishTime = action.payload.time;
-
-				// const winningCar = cars.reduce((prev, current) => {
-				// 	return prev.finishTime < current.finishTime ? prev : current;
-				// });
-
-				// if (winningCar) {
-				// Create or update the winner in the server
-				// const existingWinner = await dispatch(
-				// 	fetchWinnerById(winningCar.id)
-				// ).unwrap();
-				// if (existingWinner) {
-				// Update winner if it already exists
-				// dispatch(
-				// 	updateWinner({
-				// 		id: existingWinner.id,
-				// 		time: winningCar.finishTime!,
-				// 		wins: (winningCar.wins || 0) + 1,
-				// 	})
-				// );
-				// } else {
-				// Create new winner if it doesn't exist
-				// dispatch(
-				// 	createWinner({
-				// 		id: winningCar.id,
-				// 		name: winningCar.name,
-				// 		wins: (winningCar.wins || 0) + 1,
-				// 	})
-				// );
-				// }
-				// }
 			}
 			if (
 				!state.winner ||

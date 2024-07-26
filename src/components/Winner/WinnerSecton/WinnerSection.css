@@ -1,7 +1,9 @@
-/* table, th, td {
-    border: 1px solid rgb(247, 247, 247);
+table, th, td {
+    /* border: 1px solid rgb(247, 247, 247); */
     border-collapse: collapse;
-} */
+    font-family: 'Beon';
+    font-size: 20px;
+}
 .winner-table-container, table{
     width: 100%;
     border-collapse: collapse;
@@ -10,15 +12,13 @@
 th{
     text-align: left;
     font-family: 'Beon';
+    width: 200px;
+}
+th, td{
+    padding-left: 20px;
 }
 .winner-head{
     height: 40px;
-    border: 3px solid #ff00ff;
-    border-radius: 5px;
-}
-.winner-head th{
-    border-top-left-radius: 15px;
-}
-.winner-head th{
-    border-top-right-radius: 15px;
+    box-shadow: 0 0 5px #ff00ff, 0 0 5px #ff00ff, 0 0 15px #ff00ff;
+    border-radius: 10px;
 }

@@ -42,6 +42,7 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 			console.log(`${action} button clicked`);
 		}
 	};
+	// A and B buttons
 	const handleStartEngine = async () => {
 		try {
 			const startResponse = await fetch(
