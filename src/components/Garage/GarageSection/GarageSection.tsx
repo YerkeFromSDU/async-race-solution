@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux'; //eslint-disable-line
 import { RootState, AppDispatch } from '../../../store/store.ts';
 import { fetchCars } from '../../../store/carSlice.ts';
 import CarSection from './CarSection/CarSection.tsx';
 import Pagination from '../../Pagination/Pagination.tsx';
 import EmptyList from '../../EmptyList/EmptyList.tsx';
+import { setPageNumber } from '../../../store/viewSlice.ts';
 
 interface GarageSectionProps {
 	onSelectCar: (id: number) => void;
@@ -13,17 +14,20 @@ interface GarageSectionProps {
 const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 	const dispatch = useDispatch<AppDispatch>();
 	const cars = useSelector((state: RootState) => state.cars.cars);
-	const [currentPage, setCurrentPage] = useState(1);
-	const n = 7;
-	const [carsPerPage] = useState(n);
+	const pageNumber = useSelector((state: RootState) => state.view.pageNumber);
+	const itemsPerPage = 7;
+
 	useEffect(() => {
 		dispatch(fetchCars());
 	}, [dispatch]);
 
-	const indexOfLastCar = currentPage * carsPerPage;
-	const indexOfFirstCar = indexOfLastCar - carsPerPage;
+	const indexOfLastCar = pageNumber * itemsPerPage;
+	const indexOfFirstCar = indexOfLastCar - itemsPerPage;
 	const currentCars = cars.slice(indexOfFirstCar, indexOfLastCar);
-	const handlePageChange = (pageNumber: number) => setCurrentPage(pageNumber);
+
+	const handlePageChange = (newPageNumber: number) => {
+		dispatch(setPageNumber(newPageNumber));
+	};
 
 	return (
 		<>
@@ -38,8 +42,8 @@ const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 			</div>
 			<Pagination
 				totalItems={cars.length}
-				itemsPerPage={carsPerPage}
-				currentPage={currentPage}
+				itemsPerPage={itemsPerPage}
+				currentPage={pageNumber}
 				onPageChange={handlePageChange}
 			/>
 		</>

@@ -20,8 +20,9 @@ function WinnerSection() {
 	const indexOfLastWinner = currentPage * winnersPerPage;
 	const indexOfFirstWinner = indexOfLastWinner - winnersPerPage;
 	const currentWinners = winners.slice(indexOfFirstWinner, indexOfLastWinner);
-	const handlePageChange = (pageNumber: number) => setCurrentPage(pageNumber);
-
+	const handlePageChange = (newPageNumber: number) => {
+		setCurrentPage(newPageNumber);
+	};
 	function winnerName(id: number): string {
 		let name: string = '';
 		for (const car of cars) { //eslint-disable-line 
