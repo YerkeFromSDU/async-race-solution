@@ -5,6 +5,7 @@ import { RootState, AppDispatch } from '../../../store/store.ts';
 import { fetchCars } from '../../../store/carSlice.ts';
 import CarSection from './CarSection/CarSection.tsx';
 import Pagination from '../../Pagination/Pagination.tsx';
+import EmptyList from '../../EmptyList/EmptyList.tsx';
 
 interface GarageSectionProps {
 	onSelectCar: (id: number) => void;
@@ -27,9 +28,13 @@ const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 	return (
 		<>
 			<div className='cars-list' style={{ margin: '30px 0' }}>
-				{currentCars.map((car) => (
-					<CarSection key={car.id} onSelectCar={onSelectCar} car={car} />
-				))}
+				{cars.length === 0 ? (
+					<EmptyList />
+				) : (
+					currentCars.map((car) => (
+						<CarSection key={car.id} onSelectCar={onSelectCar} car={car} />
+					))
+				)}
 			</div>
 			<Pagination
 				totalItems={cars.length}

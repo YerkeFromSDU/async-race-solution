@@ -10,7 +10,8 @@ const WinnerBanner = () => {
 	);
 
 	if (!raceFinished || !winner) return null;
-	const finishTime = Math.ceil(winner.finishTime);
+	// const finishTime = Math.ceil(winner.finishTime);
+	const finishTime = winner.finishTime.toFixed(2); //eslint-disable-line
 	return (
 		<div className='winner-banner'>
 			<h2>Winner!</h2>

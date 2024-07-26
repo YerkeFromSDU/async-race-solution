@@ -28,7 +28,7 @@ const Pagination: React.FC<PaginationProps> = ({
 		}
 	};
 
-	// Automatically go to the previous page if the current page is empty
+	// go to the previous page if the current page is empty
 	React.useEffect(() => {
 		if (totalItems === 0) return;
 
@@ -46,7 +46,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				disabled={currentPage === 1}
 				className='pagination-button'
 			>
-				&lt;
+				&#10703;
 			</button>
 			<span className='pagination-info'>
 				{currentPage} / {totalPages}
@@ -57,7 +57,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				disabled={currentPage === totalPages}
 				className='pagination-button'
 			>
-				&gt;
+				&#10704;
 			</button>
 		</div>
 	);
