@@ -1,5 +1,12 @@
 ## Checklist 400/400 pts
 
+## 🚀 Deployment Link: https://66a66ebf7b4de5526241533f--darling-mooncake-6f71ee.netlify.app
+
+## ✏️Notes:
+- When starting race, cars information **loads** from API. After, cars with **status 500 appear as overheated**. And then race starts.
+- **The more cars take part in race, the more time it takes to load.** That's why I made **generate button for 20 only.** But you can press multiple times if you want to see more generated cars. **It was only for your testing convinience.**
+- For some browsers CORS error can disturb the fetching, **so please use Chrome.**
+  
 ## 🚀 UI Deployment
 
 - [x] **Deployment Platform:** Successfully deploy the UI on one of the following platforms: GitHub Pages, Netlify, Vercel, Cloudflare Pages, or a similar service.
