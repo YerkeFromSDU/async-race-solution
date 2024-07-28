@@ -7,12 +7,14 @@ import CarSection from './CarSection/CarSection.tsx';
 import Pagination from '../../Pagination/Pagination.tsx';
 import EmptyList from '../../EmptyList/EmptyList.tsx';
 import { setPageNumber } from '../../../store/viewSlice.ts';
+import './GarageSection.css';
 
 interface GarageSectionProps {
 	onSelectCar: (id: number) => void;
 }
 const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 	const dispatch = useDispatch<AppDispatch>();
+	const loading = useSelector((state: RootState) => state.cars.loading);
 	const cars = useSelector((state: RootState) => state.cars.cars);
 	const pageNumber = useSelector((state: RootState) => state.view.pageNumber);
 	const itemsPerPage = 7;
@@ -32,6 +34,13 @@ const GarageSection: React.FC<GarageSectionProps> = ({ onSelectCar }) => {
 	return (
 		<>
 			<div className='cars-list' style={{ margin: '30px 0' }}>
+				{loading && (
+					<div className='loading-spinner'>
+						<div className='spinner' />
+						<p>Preparing the cars...</p>
+					</div>
+				)}
+
 				{cars.length === 0 ? (
 					<EmptyList />
 				) : (

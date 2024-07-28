@@ -22,12 +22,21 @@ const initialState: WinnerState = {
 };
 export const fetchWinners = createAsyncThunk(
 	'winners/fetchWinners',
-	async (_, { getState }) => {
-		const response = await fetch('http://localhost:3000/winners');
-		const { cars } = (getState() as RootState).cars;
+	async (
+		params: { sortBy: 'wins' | 'time' | 'id'; order: 'ASC' | 'DESC' },
+		{ getState }
+	) => {
+		const { sortBy, order } = params;
+		const response = await fetch(
+			`http://localhost:3000/winners?_sort=${sortBy}&_order=${order}`
+		);
+		if (!response.ok) {
+			throw new Error('Failed to fetch winners');
+		}
 		const data = await response.json();
-		return data.map((winner: any) => { //eslint-disable-line
-			const car = cars.find((car) => car.id === winner.id);//eslint-disable-line
+		const { cars } = (getState() as RootState).cars;
+		return data.map((winner: any) => {
+			const car = cars.find((car) => car.id === winner.id);
 			return {
 				...winner,
 				name: car ? car.name : 'Unknown',
@@ -56,10 +65,12 @@ export const addWinner = createAsyncThunk(
 			},
 			body: JSON.stringify(winner),
 		});
+		console.log('Response:', response);
 		if (!response.ok) {
 			throw new Error('Failed to add winner');
 		}
 		const data = await response.json();
+		console.log('Response data:', data);
 		return data;
 	}
 );
@@ -79,44 +90,26 @@ export const updateWinner = createAsyncThunk(
 		return response.json();
 	}
 );
-export const deleteZeroWinsWinners = createAsyncThunk<number[], void>(
-	'winners/deleteZeroWinsWinners',
-	async (_, { dispatch, getState, rejectWithValue }) => { //eslint-disable-line
+export const deleteWinner = createAsyncThunk<void, number>(
+	'winners/deleteWinner',
+	async (winnerId: number) => {
 		try {
-			// Fetch all winners
-			const response = await fetch('http://localhost:3000/winners');
-			if (!response.ok) {
-				throw new Error('Failed to fetch winners.');
-			}
-			const winners = await response.json();
-
-			// Find winners with 0 wins
-			const zeroWinsWinners = winners.filter(
-				(winner: any) => winner.wins === 0 //eslint-disable-line
+			const response = await fetch(
+				`http://localhost:3000/winners/${winnerId}`,
+				{
+					method: 'DELETE',
+				}
 			);
 
-			// Delete each winner with 0 wins
-			const deleteRequests = zeroWinsWinners.map(async (winner: any) => { //eslint-disable-line
-				const deleteResponse = await fetch(
-					`http://localhost:3000/winners/${winner.id}`,
-					{
-						method: 'DELETE',
-					}
-				);
-				if (!deleteResponse.ok) {
-					throw new Error(`Failed to delete winner with ID ${winner.id}`);
-				}
-			});
-
-			await Promise.all(deleteRequests);
-
-			// Return the IDs of the deleted winners
-			return zeroWinsWinners.map((winner: any) => winner.id); //eslint-disable-line
+			if (!response.ok) {
+				throw new Error('Failed to delete winner.');
+			}
 		} catch (error) {
-			return rejectWithValue(error.message);
+			console.log(error);
 		}
 	}
 );
+
 const winnerSlice = createSlice({
 	name: 'winners',
 	initialState,
@@ -127,16 +120,11 @@ const winnerSlice = createSlice({
 		) {
 			// const { id, time } = action.payload;
 			const winner = action.payload;
-			const existingWinner = state.items.find((w) => w.id === winner.id);//eslint-disable-line
+			const existingWinner = state.items.find((w) => w.id === winner.id);
 			if (existingWinner) {
 				existingWinner.wins = winner.wins;
 				existingWinner.time = winner.time;
-				// if (time < existingWinner.time) {
-				// 	existingWinner.time = time;
-				// }
-				// existingWinner.wins += 1;
 			} else {
-				// state.items.push({ ...action.payload, wins: 1 });
 				state.items.push(winner);
 			}
 		},
@@ -193,19 +181,12 @@ const winnerSlice = createSlice({
 				state.status = 'failed';
 				state.error = action.error.message;
 			})
-			.addCase(deleteZeroWinsWinners.pending, (state) => {
-				state.status = 'loading';
+			.addCase(deleteWinner.fulfilled, (state, action) => {
+				const id = action.meta.arg;
+				state.items = state.items.filter((winner) => winner.id !== id);
 			})
-			.addCase(deleteZeroWinsWinners.fulfilled, (state, action) => {
-				state.status = 'succeeded';
-				// Remove winners with 0 wins from state
-				state.items = state.items.filter(
-					(winner) => !action.payload.includes(winner.id)
-				);
-			})
-			.addCase(deleteZeroWinsWinners.rejected, (state, action) => {
-				state.status = 'failed';
-				state.error = action.payload as string;
+			.addCase(deleteWinner.rejected, (state, action) => {
+				console.error('Failed to delete winner:', action.error.message);
 			});
 	},
 });

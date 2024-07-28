@@ -6,6 +6,7 @@
     width: 300px;
     display: flex;
     justify-content: space-around;
+    /* flex-wrap: wrap; */
 }
 .create-panel form input, .update-panel form input{
     border: 1px solid #00ff00;
@@ -15,6 +16,7 @@
 .panel-container{
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
 .panel-container Button, input{
     font-family: 'Beon';

@@ -13,7 +13,6 @@ function WinnerSection() {
 		status,
 		error,
 	} = useSelector((state: RootState) => state.winners);
-	// const cars = useSelector((state: RootState) => state.cars.cars);
 	const [currentPage, setCurrentPage] = useState(1);
 	const n = 10;
 	const [winnersPerPage] = useState(n);
@@ -25,45 +24,43 @@ function WinnerSection() {
 	const handlePageChange = (newPageNumber: number) => {
 		setCurrentPage(newPageNumber);
 	};
-	// function winnerName(id: number): string {
-	// 	let name: string = '';
-	// 	for (const car of cars) { //eslint-disable-line
-	// 		if (id === car.id) {
-	// 			name = car.name;
-	// 			break;
-	// 		}
-	// 	}
-	// 	return name;
-	// }
-	// function winnerColor(id: number): string {
-	// 	let color: string = '';
-	// 	for (const car of cars) { //eslint-disable-line
-	// 		if (id === car.id) {
-	// 			color = car.color;
-	// 			break;
-	// 		}
-	// 	}
-	// 	return color;
-	// }
+
+	const [sortBy, setSortBy] = useState<'id' | 'wins' | 'time'>('wins');
+	const [order, setOrder] = useState<'ASC' | 'DESC'>('ASC');
 	useEffect(() => {
+		dispatch(fetchCars());
 		if (status === 'idle') {
-			dispatch(fetchCars());
-			dispatch(fetchWinners());
+			dispatch(fetchWinners({ sortBy, order }));
 		} else {
 			console.log(error);
 		}
-	}, [status, dispatch, error]);
+	}, [status, dispatch, sortBy, order, error]);
+	const handleSortChange = (newSortBy: 'id' | 'wins' | 'time') => {
+		if (sortBy === newSortBy) {
+			setOrder(order === 'ASC' ? 'DESC' : 'ASC');
+		} else {
+			setSortBy(newSortBy);
+			setOrder('ASC');
+		}
+		dispatch(fetchWinners({ sortBy: newSortBy, order }));
+	};
 
 	return (
 		<>
 			<div className='winner-table-container'>
 				<table>
 					<tr className='winner-head'>
-						<th>#</th>
+						<th onClick={() => handleSortChange('id')}>
+							# {order === 'DESC' ? '▲' : '▼'}
+						</th>
 						<th>Car</th>
 						<th>Name</th>
-						<th>Wins</th>
-						<th>Best Time</th>
+						<th onClick={() => handleSortChange('wins')}>
+							Wins {order === 'DESC' ? '▲' : '▼'}
+						</th>
+						<th onClick={() => handleSortChange('time')}>
+							Best Time {order === 'DESC' ? '▲' : '▼'}
+						</th>
 					</tr>
 					{currentWinners.map((winner) => (
 						<tr key={winner.id}>
@@ -90,7 +87,6 @@ function WinnerSection() {
 							</td>
 							<td>{winner.name}</td>
 							<td>{winner.wins}</td>
-							{/* eslint-disable-next-line */}
 							<td>{winner.time.toFixed(2)} seconds</td>
 						</tr>
 					))}

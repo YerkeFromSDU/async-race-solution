@@ -1,0 +1,43 @@
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20rem;
+    height: 6rem;
+    position: absolute;
+    top: 50%;
+    left: 40%;
+    padding: 20px;
+    z-index: 1003; /* Ensure it appears above other content */
+    background-color: rgba(255, 255, 255, 0.543);
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    box-shadow: 0 0 5px #00ff00, 0 0 5px #00ff00, 0 0 5px #00ff00;
+  }
+  .loading-spinner p{
+    font-family: 'Beon';
+    color: rgb(0, 0, 0);
+    font-size: 20px;
+  }
+  .spinner {
+    border: 8px solid #f3f3f3; /* Light grey */
+    border-top: 8px solid #ff00ff; /* Blue color */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @media (max-width: 500px) {
+    .loading-spinner {
+        font-size: 0.7rem; /* Adjust font size if needed */
+        padding: 10px;
+        top: 50%;
+        left: 70px;
+    }
+}

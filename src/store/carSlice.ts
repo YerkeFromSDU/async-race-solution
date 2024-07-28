@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'; //eslint-disable-line
 import { AppDispatch, RootState } from './store.ts'; //eslint-disable-line
-import { updateWinner, addWinner, addOrUpdateWinner,deleteZeroWinsWinners } from './winnerSlice.ts'; //eslint-disable-line
+import { updateWinner, addWinner, addOrUpdateWinner,fetchWinners,deleteWinner } from './winnerSlice.ts'; //eslint-disable-line
 import { useDispatch } from 'react-redux'; //eslint-disable-line
 import { randomName, randomModel, randomColor } from '../carUtils.ts';
 
@@ -12,6 +12,7 @@ interface Car {
 	position?: number;
 	animationDuration?: string;
 	finishTime?: number;
+	isOverheated?: boolean;
 }
 
 interface CarState {
@@ -22,6 +23,7 @@ interface CarState {
 	isRacing: boolean;
 	winner: Car | null;
 	raceFinished: boolean;
+	loading: boolean;
 }
 
 const initialState: CarState = {
@@ -32,6 +34,7 @@ const initialState: CarState = {
 	isRacing: false,
 	winner: null,
 	raceFinished: false,
+	loading: false,
 };
 
 export const generateCars = createAsyncThunk<
@@ -39,12 +42,12 @@ export const generateCars = createAsyncThunk<
 	void,
 	{ dispatch: AppDispatch }
 >('cars/generateCars', async (_, { dispatch }) => {
-	for (let i = 1; i <= 100; i++) { //eslint-disable-line
+	for (let i = 1; i <= 20; i++) {
 		const car = {
 			name: `${randomName()} ${randomModel()}`,
 			color: randomColor(),
 		};
-		await dispatch(createCar(car)); //eslint-disable-line
+		await dispatch(createCar(car));
 	}
 });
 
@@ -52,6 +55,7 @@ export const fetchCars = createAsyncThunk('cars/fetchCars', async () => {
 	const response = await fetch('http://localhost:3000/garage');
 	return response.json();
 });
+
 export const fetchCarById = createAsyncThunk(
 	'cars/fetchCarById',
 	async (id: number) => {
@@ -88,17 +92,29 @@ export const updateCar = createAsyncThunk(
 );
 export const deleteCar = createAsyncThunk<void, number>(
 	'cars/deleteCar',
-	async (carId: number) => {
+	async (carId: number, { dispatch }) => {
 		try {
-			const response = await fetch(`http://localhost:3000/garage/${carId}`, {
-				method: 'DELETE',
-			});
+			const winnersResponse = await fetch('http://localhost:3000/winners');
+			if (!winnersResponse.ok) {
+				throw new Error('Failed to fetch winners.');
+			}
+			const winners = await winnersResponse.json();
 
-			if (!response.ok) {
+			const carInWinners = winners.some((winner: any) => winner.id === carId);
+
+			const deleteCarResponse = await fetch(
+				`http://localhost:3000/garage/${carId}`,
+				{
+					method: 'DELETE',
+				}
+			);
+			if (!deleteCarResponse.ok) {
 				throw new Error('Failed to delete car.');
 			}
 
-			// const data = await response.json();
+			if (carInWinners) {
+				dispatch(deleteWinner(carId));
+			}
 		} catch (error) {
 			console.log(error);
 		}
@@ -111,10 +127,11 @@ export const startRace = createAsyncThunk<
 >('cars/startRace', async (_, { dispatch, getState }) => {
 	const { cars, isRacing } = getState().cars;
 	if (isRacing) return;
-	dispatch(setIsRacing(true));//eslint-disable-line
 
+	dispatch(setIsRacing(true));
 	try {
 		// Start engines for all cars
+		dispatch(setLoading(true));
 		const startRequests = cars.map(async (car) => {
 			try {
 				const response = await fetch(
@@ -125,47 +142,47 @@ export const startRace = createAsyncThunk<
 					throw new Error(`Failed to start engine for car ${car.id}`);
 				const data = await response.json();
 				const { velocity, distance } = data;
-				const duration = distance / velocity / 1000;//eslint-disable-line
+				const duration = distance / velocity / 1000;
 				dispatch(
-					updateCarAnimationDuration({//eslint-disable-line
+					updateCarAnimationDuration({
 						id: car.id,
 						animationDuration: `${duration}s`,
 					})
 				);
+
 				return { car, duration };
 			} catch (error) {
-				console.error(`Error starting engine for car ${car.id}:`, error);
-				dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+				if (error) {
+					console.error(`Error starting engine for car ${car.id}:`, error);
+				}
+				dispatch(updateCarStatus({ id: car.id, isDriving: false }));
 				return null;
 			}
 		});
 
 		const startResults = await Promise.all(startRequests);
 
-		// Drive all cars
+		// dispatch(setLoading(false));
+
 		const driveRequests = startResults.map(async (result) => {
 			if (result) {
-				const { car, duration } = result; //eslint-disable-line
+				const { car, duration } = result;
 				try {
 					const response = await fetch(
 						`http://localhost:3000/engine?id=${car.id}&status=drive`,
 						{ method: 'PATCH' }
 					);
 					if (!response.ok) throw new Error(`Failed to drive car ${car.id}`);
-					dispatch(updateCarStatus({ id: car.id, isDriving: true }));//eslint-disable-line
+					// dispatch(updateCarStatus({ id: car.id, isDriving: true })); // loads little but winner after last car
 
-					setTimeout(() => {
-						dispatch(finishRaceForCar({ id: car.id, time: duration })); //eslint-disable-line
-					}, duration * 1000); //eslint-disable-line
-
-					return car.id;
+					return { car, duration };
 				} catch (error) {
-					console.error(`Error driving car ${car.id}:`, error);
-					dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+					console.error(`The car ${car.id} is overheated`, error);
 					dispatch(
-						updateCarAnimationDuration({//eslint-disable-line
+						updateCarStatus({
 							id: car.id,
-							animationDuration: undefined,
+							isDriving: false,
+							isOverheated: true,
 						})
 					);
 					return null;
@@ -175,63 +192,81 @@ export const startRace = createAsyncThunk<
 		});
 
 		const driveResults = await Promise.all(driveRequests);
-
-		driveResults.forEach((carId) => {
-			if (carId !== null) {
-				dispatch(startCarAnimation(carId));//eslint-disable-line
-			}
-		});
-
-		const maxDuration = Math.max(
-			...startResults.map((result) => (result ? result.duration : 0))
+		dispatch(setLoading(false));
+		const finishTimes = driveResults
+			.map((result) => {
+				if (result) {
+					const { car, duration } = result;
+					dispatch(updateCarStatus({ id: car.id, isDriving: true })); // loads a lot but winner is after first
+					setTimeout(() => {
+						dispatch(finishRaceForCar({ id: car.id, time: duration }));
+					}, duration * 1000); //eslint-disable-line
+					return { carId: car.id, finishTime: duration };
+				}
+				return null;
+			})
+			.filter(
+				(result): result is { carId: number; finishTime: number } =>
+					result !== null
+			);
+		const minDuration = Math.min( //eslint-disable-line
+			...finishTimes.map((result) => result.finishTime)
 		);
+		dispatch(fetchWinners({ sortBy: 'wins', order: 'DESC' }));
 		setTimeout(
 			async () => {
-				const { cars } = getState().cars;//eslint-disable-line
+				if (!getState().cars.isRacing) return;
+
+				const { cars } = getState().cars;
 				const finishedCars = cars.filter((car) => car.finishTime !== undefined);
+
 				if (finishedCars.length > 0) {
 					const winner = finishedCars.reduce((prev, current) => {
 						return prev.finishTime! < current.finishTime! ? prev : current;
 					});
-					dispatch(setWinner(winner)); //eslint-disable-line
-					// Prepare winner data
+					dispatch(setWinner(winner));
+
 					const winnerData = {
 						id: winner.id,
-						time: winner.finishTime!,
 						wins: 0, // Initial wins count
+						time: winner.finishTime!,
 					};
+					console.log('Adding winner:', winnerData);
+
 					const state = getState();
 					const existingWinner = state.winners.items.find(
 						(w) => w.id === winner.id
 					);
 					if (existingWinner) {
 						// Update existing winner
+						console.log('is winner exists:', existingWinner);
 						winnerData.wins = existingWinner.wins + 1;
 						await dispatch(updateWinner(winnerData)).unwrap();
 					} else {
 						// Add new winner
+						console.log('is winner dont exists:', existingWinner);
 						winnerData.wins = 1;
 						await dispatch(addWinner(winnerData)).unwrap();
 					}
-					dispatch(deleteZeroWinsWinners());
-					// Dispatch add or update winner
-					dispatch(addOrUpdateWinner(winnerData)); //eslint-disable-line
-					// dispatch(addWinner(winnerData)); //eslint-disable-line
-					// dispatch(updateWinner(winnerData)); //eslint-disable-line
+					dispatch(addOrUpdateWinner(winnerData));
 				}
 			},
-			(maxDuration + 1) * 1000 //eslint-disable-line
+			minDuration * 1000 //eslint-disable-line
 		);
 	} catch (error) {
 		console.error('Error starting race:', error);
 		// stop all cars if any request fails
 		cars.forEach((car) => {
-			dispatch(updateCarStatus({ id: car.id, isDriving: false }));//eslint-disable-line
+			// dispatch(updateCarStatus({ id: car.id, isDriving: false }));
 			dispatch(
-				updateCarAnimationDuration({ id: car.id, animationDuration: undefined })//eslint-disable-line
+				updateCarStatus({ id: car.id, isDriving: false, isOverheated: false })
+			);
+			dispatch(
+				updateCarAnimationDuration({ id: car.id, animationDuration: undefined })
 			);
 		});
-		dispatch(setIsRacing(false));//eslint-disable-line
+		dispatch(setIsRacing(false));
+		dispatch(setLoading(false));
 	}
 });
 
@@ -240,42 +275,59 @@ export const resetRace = createAsyncThunk<
 	void,
 	{ dispatch: AppDispatch }
 >('cars/resetRace', async (_, { dispatch }) => {
-	dispatch(setIsRacing(false)); //eslint-disable-line
-	dispatch(resetAllCars()); //eslint-disable-line
+	dispatch(setIsRacing(false));
+	dispatch(resetAllCars());
+	dispatch(setWinner(null));
 });
+
 const carSlice = createSlice({
 	name: 'cars',
 	initialState,
 	reducers: {
+		setLoading(state, action: PayloadAction<boolean>) {
+			state.loading = action.payload;
+		},
 		setIsRacing(state, action: PayloadAction<boolean>) {
 			state.isRacing = action.payload;
 		},
 		updateCarStatus(
 			state,
-			action: PayloadAction<{ id: number; isDriving: boolean }>
+			action: PayloadAction<{
+				id: number;
+				isDriving: boolean;
+				isOverheated?: boolean;
+			}>
 		) {
-			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
-			if (car) car.isDriving = action.payload.isDriving;
+			const car = state.cars.find((car) => car.id === action.payload.id);
+			// if (car) car.isDriving = action.payload.isDriving;
+			if (car) {
+				car.isDriving = action.payload.isDriving;
+				if (action.payload.isOverheated !== undefined) {
+					car.isOverheated = action.payload.isOverheated;
+				}
+			}
 		},
 		updateCarAnimationDuration(
 			state,
 			action: PayloadAction<{ id: number; animationDuration?: string }>
 		) {
-			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+			const car = state.cars.find((car) => car.id === action.payload.id);
 			if (car) car.animationDuration = action.payload.animationDuration;
 		},
 		startCarAnimation(state, action: PayloadAction<number>) {
-			const car = state.cars.find((car) => car.id === action.payload); //eslint-disable-line
+			const car = state.cars.find((car) => car.id === action.payload);
 			if (car) {
 				car.position = 1;
 				car.isDriving = true;
-			} // Set to some value to trigger CSS animation
+			}
 		},
 		resetAllCars(state) {
 			state.cars.forEach((car) => {
 				car.isDriving = false;
-				car.position = 0; // Assuming initial position is 0
+				car.position = 0;
 				car.animationDuration = undefined;
+				car.finishTime = undefined;
+				car.isOverheated = false;
 			});
 			state.winner = null;
 			state.raceFinished = false;
@@ -284,18 +336,19 @@ const carSlice = createSlice({
 			state,
 			action: PayloadAction<{ id: number; time: number }>
 		) {
-			const car = state.cars.find((car) => car.id === action.payload.id); //eslint-disable-line
+			const car = state.cars.find((car) => car.id === action.payload.id);
 
 			if (car) {
 				car.finishTime = action.payload.time;
+				state.raceFinished = true;
+				// if (
+				// 	!state.winner ||
+				// 	(car && car.finishTime! < state.winner.finishTime!)
+				// ) {
+				// 	state.winner = car!;
+				// 	console.log(state.winner);
+				// }
 			}
-			if (
-				!state.winner ||
-				(car && car.finishTime! < state.winner.finishTime!)
-			) {
-				state.winner = car!;
-			}
-			state.raceFinished = true;
 		},
 		setWinner(state, action: PayloadAction<Car>) {
 			state.winner = action.payload;
@@ -349,5 +402,6 @@ export const {
 	startCarAnimation,
 	finishRaceForCar,
 	setWinner,
+	setLoading,
 } = carSlice.actions;
 export default carSlice.reducer;

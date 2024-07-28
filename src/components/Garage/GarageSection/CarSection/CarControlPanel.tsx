@@ -69,7 +69,7 @@ const CarControlPanel: React.FC<CarControlPanelProps> = ({
 					}
 				);
 				console.log(driveResponse);
-				if (driveResponse.status === 500) { //eslint-disable-line
+				if (driveResponse.status === 500) {
 					setStatus('stopped');
 					onStopDriving();
 				}

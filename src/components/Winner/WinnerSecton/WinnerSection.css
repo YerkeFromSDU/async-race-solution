@@ -13,6 +13,7 @@ th{
     text-align: left;
     font-family: 'Beon';
     width: 200px;
+    cursor: pointer;
 }
 th, td{
     padding-left: 20px;

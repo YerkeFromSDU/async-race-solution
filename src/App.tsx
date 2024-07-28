@@ -11,7 +11,7 @@ function App() {
 		<div className='background-container'>
 			<Header />
 			<Routes>
-				<Route path='/garage' element={<Garage />} />
+				<Route path='/' element={<Garage />} />
 				<Route path='/winner' element={<Winner />} />
 			</Routes>
 		</div>

@@ -10,7 +10,7 @@ export interface HeaderProps {}
 export default function Header() {
 	const navigate = useNavigate();
 	const isRacing = useSelector((state: RootState) => state.cars.isRacing);
-	const handleNavToGarage = () => navigate('/garage');
+	const handleNavToGarage = () => navigate('/');
 	const handleNavToWinner = () => navigate('/winner');
 	return (
 		<div className='header-container'>
